@@ -160,6 +160,11 @@ def main():
         g = 255
         b = 255
         w = 255
+    elif pattern == "sunset":
+        r = 252
+        g = 94
+        b = 3
+        w = 0
     elif pattern == "demo":
         try:
             pixels = SK6812_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
