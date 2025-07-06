@@ -1,12 +1,55 @@
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+#!/bin/bash
 
-./remove.sh || true
+# Color definitions
+GREEN='\033[0;32m'
+BLUE='\033[1;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 
-sudo cp led_service.service /etc/systemd/system/led_service.service
+# Helper for status messages
+log_info()    { echo -e "${BLUE}[*] $1${NC}"; }
+log_success() { echo -e "${GREEN}[✓] $1${NC}"; }
+log_warn()    { echo -e "${YELLOW}[!] $1${NC}"; }
+log_error()   { echo -e "${RED}[✗] $1${NC}"; }
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV_PATH="$SCRIPT_DIR/venv"
+PYTHON_PATH="$VENV_PATH/bin/python"
+SET_SCRIPT="$SCRIPT_DIR/set.py"
+SERVICE_FILE="/etc/systemd/system/led_service.service"
+
+log_info "Creating Python virtual environment..."
+python3 -m venv "$VENV_PATH"
+source "$VENV_PATH/bin/activate"
+
+log_info "Installing dependencies..."
+pip install --upgrade pip
+pip install -r "$SCRIPT_DIR/requirements.txt" || log_error "Failed to install dependencies"
+
+log_info "Creating systemd service file at $SERVICE_FILE..."
+
+sudo bash -c "cat > $SERVICE_FILE" <<EOF
+[Unit]
+Description=LED control service
+After=multi-user.target
+
+[Service]
+ExecStart=$PYTHON_PATH $SET_SCRIPT
+WorkingDirectory=$SCRIPT_DIR
+StandardOutput=journal
+StandardError=journal
+Restart=always
+User=$USER
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+log_info "Reloading systemd and enabling service..."
 sudo systemctl daemon-reexec
 sudo systemctl daemon-reload
 sudo systemctl enable led_service.service
-sudo systemctl start led_service.service
-sudo systemctl status led_service.service
+sudo systemctl restart led_service.service
+
+log_success "Done! LED service is installed and running."
