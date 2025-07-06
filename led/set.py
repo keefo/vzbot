@@ -3,6 +3,7 @@ import configparser
 import logging
 import board
 import colorsys
+import time
 import adafruit_pixelbuf
 from adafruit_raspberry_pi5_neopixel_write import neopixel_write
 
@@ -57,9 +58,6 @@ class SK6812_RGBW(adafruit_pixelbuf.PixelBuf):
             self[i] = (r, g, b, 0)  # SK6812 RGBW: (R, G, B, W)
     
     def animate_rainbow(self, delay=0.5):
-        import colorsys
-        import time
-
         num_leds = len(self)
         logging.info(f"animate_rainbow start: num_leds={num_leds}")
         frame = 0
@@ -75,6 +73,17 @@ class SK6812_RGBW(adafruit_pixelbuf.PixelBuf):
             self.show()
             time.sleep(delay)
             frame += 1
+
+    def animate_xmas(self, delay=0.3):
+        colors = [(255, 0, 0, 0), (0, 255, 0, 0), (255, 255, 255, 0)]  # red, green, white
+        pattern = [colors[i % len(colors)] for i in range(len(self))]
+        logging.info("Starting animate_xmas")
+        while True:
+            for i in range(len(self)):
+                self[i] = pattern[i]
+            self.show()
+            pattern = pattern[-1:] + pattern[:-1]  # rotate right
+            time.sleep(delay)
 
 
 
@@ -171,6 +180,16 @@ def main():
             pixels = SK6812_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
             # Set color segments
             pixels.animate_rainbow()
+            pixels.show()
+            logging.info("LEDs updated successfully.")
+        except Exception as e:
+            logging.exception("Failed to apply LED config")
+        return
+    elif pattern == "xmas":
+        try:
+            pixels = SK6812_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
+            # Set color segments
+            pixels.animate_xmas()
             pixels.show()
             logging.info("LEDs updated successfully.")
         except Exception as e:
