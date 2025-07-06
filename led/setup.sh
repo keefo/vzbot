@@ -15,8 +15,8 @@ log_error()   { echo -e "${RED}[✗] $1${NC}"; }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_PATH="$SCRIPT_DIR/venv"
-PYTHON_PATH="$VENV_PATH/bin/python"
-SET_SCRIPT="$SCRIPT_DIR/set.py"
+PYTHON_PATH="$VENV_PATH/bin/python3"
+SVS_SCRIPT="$SCRIPT_DIR/led_service.py"
 SERVICE_FILE="/etc/systemd/system/led_service.service"
 
 log_info "Creating Python virtual environment..."
@@ -35,7 +35,7 @@ Description=LED control service
 After=multi-user.target
 
 [Service]
-ExecStart=$PYTHON_PATH $SET_SCRIPT
+ExecStart=$PYTHON_PATH $SVS_SCRIPT
 WorkingDirectory=$SCRIPT_DIR
 StandardOutput=journal
 StandardError=journal
