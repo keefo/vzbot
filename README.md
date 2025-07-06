@@ -9,3 +9,9 @@ https://vi.aliexpress.com/item/1005004794429155.html?spm=a2g0o.order_list.order_
 
 
 <img src="doc/led.jpg" />
+
+```bash
+cd ~/
+git clone https://github.com/keefo/vzbot.git
+./vzbot/led/setup.sh
+```
