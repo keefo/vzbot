@@ -5,8 +5,11 @@ import logging
 import os
 from pathlib import Path
 
-CONFIG_PATH = Path("/home/lianxu/led/led_config.ini")
-LOG_DIR = "/home/lianxu/led/logs/"
+
+# Get the directory where this script lives
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_PATH = os.path.join(SCRIPT_DIR, "led_config.ini")
+LOG_DIR = os.path.join(SCRIPT_DIR, "logs")
 LOG_FILE = os.path.join(LOG_DIR, "set_config.log")
 
 os.makedirs(LOG_DIR, exist_ok=True)
