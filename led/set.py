@@ -64,17 +64,15 @@ class SK6812_RGBW(adafruit_pixelbuf.PixelBuf):
 
         while True:
             base_hue = (frame / float(num_leds)) % 1.0
-
             for i in range(num_leds):
                 hue = (base_hue + i / num_leds) % 1.0
                 r, g, b = [int(c * 255) for c in colorsys.hsv_to_rgb(hue, 1.0, 1.0)]
                 self[i] = (r, g, b, 0)
-
             self.show()
             time.sleep(delay)
             frame += 1
 
-    def animate_xmas(self, delay=0.3):
+    def animate_xmas(self, delay=0.5):
         colors = [(255, 0, 0, 0), (0, 255, 0, 0), (255, 255, 255, 0)]  # red, green, white
         pattern = [colors[i % len(colors)] for i in range(len(self))]
         logging.info("Starting animate_xmas")
