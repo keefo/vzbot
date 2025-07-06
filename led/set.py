@@ -33,8 +33,16 @@ class SK6812_RGBW(adafruit_pixelbuf.PixelBuf):
         for i in range(0, 5):
             self[i] = color
 
-    def set_back(self, color):
-        for i in range(0, 5):
+    def set_back_left(self, color):
+        for i in range(0, 2):
+            self[i] = color
+    
+    def set_back_middle(self, color):
+        for i in range(2, 3):
+            self[i] = color
+    
+    def set_back_right(self, color):
+        for i in range(3, 5):
             self[i] = color
 
     def set_right(self, color):
@@ -140,8 +148,9 @@ def main():
         r = 128
         b = 128
     elif pattern == "orange":
-        r = 255
-        g = 165
+        r = 253
+        g = 89
+        g = 1
     elif pattern == "pink":
         r = 255
         g = 192
@@ -165,6 +174,21 @@ def main():
         g = 94
         b = 3
         w = 0
+    elif pattern == "orangeteal":
+        try:
+            pixels = SK6812_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
+            # Set color segments
+            orange=(253, 89, 1, 0)
+            teal=(36, 158, 160, 0)
+            pixels.set_back(orange)
+            pixels.set_right(orange)
+            pixels.set_front(teal)
+            pixels.set_left(teal)
+            pixels.show()
+            logging.info("LEDs updated successfully.")
+        except Exception as e:
+            logging.exception("Failed to apply LED config")
+        return
     elif pattern == "demo":
         try:
             pixels = SK6812_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
