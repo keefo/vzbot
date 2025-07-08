@@ -50,6 +50,6 @@ log_info "Reloading systemd and enabling service..."
 sudo systemctl daemon-reexec
 sudo systemctl daemon-reload
 sudo systemctl enable killswitch_service.service
-sudo systemctl restart led_killswitch_serviceservice.service
+sudo systemctl restart killswitch_service.service
 
 log_success "Done! KillSwitch Button service is installed and running."
