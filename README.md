@@ -15,3 +15,13 @@ cd ~/
 git clone https://github.com/keefo/vzbot.git
 ./vzbot/led/setup.sh
 ```
+
+# kill switch
+
+Connect any simple maniacal key switch to PI gpio17 and ground.
+
+```bash
+cd ~/
+git clone https://github.com/keefo/vzbot.git
+./vzbot/kill_switch/setup.sh
+```
