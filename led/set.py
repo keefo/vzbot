@@ -222,6 +222,18 @@ def main():
         except Exception as e:
             logging.exception("Failed to apply LED config")
         return
+    elif pattern == "backonly":
+        try:
+            pixels = SK6812_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
+            pixels.set_back((255, 255, 255, 255))
+            pixels.set_right((0, 0, 0, 0))
+            pixels.set_front((0, 0, 0, 0))
+            pixels.set_left((0, 0, 0, 0))
+            pixels.show()
+            logging.info("LEDs updated successfully.")
+        except Exception as e:
+            logging.exception("Failed to apply LED config")
+        return
 
     logging.info(f"Setting LEDs to pattern={pattern} white={white} brightness {brightness}")
 
