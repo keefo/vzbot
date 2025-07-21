@@ -12,7 +12,7 @@ print("PYTHON USED:", sys.executable)
 # === CONFIGURABLE PATHS ===
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PYTHON_PATH = os.path.join(SCRIPT_DIR, "venv/bin/python3")
-CONFIG_PATH = os.path.join(SCRIPT_DIR, "led_config.ini")
+CONFIG_PATH = os.path.expanduser("~/printer_data/config/led_config.ini")
 SCRIPT_PATH = os.path.join(SCRIPT_DIR, "set.py")
 LOG_DIR = os.path.join(SCRIPT_DIR, "logs")
 LOG_FILE = os.path.join(LOG_DIR, "led_service.log")
