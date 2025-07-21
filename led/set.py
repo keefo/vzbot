@@ -6,13 +6,12 @@ import colorsys
 import time
 import adafruit_pixelbuf
 from adafruit_raspberry_pi5_neopixel_write import neopixel_write
-from common import LOG_DIR, CONFIG_PATH
+from common import LOG_DIR, CONFIG_FILE
 
 LOG_FILE = os.path.join(LOG_DIR, "set.log")
 PIN = board.D10
 LED_COUNT = 21
 
-os.makedirs(LOG_DIR, exist_ok=True)
 logging.basicConfig(
     filename=LOG_FILE,
     level=logging.INFO,

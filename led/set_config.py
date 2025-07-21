@@ -4,7 +4,7 @@ import configparser
 import logging
 import os
 from pathlib import Path
-from common import LOG_DIR, CONFIG_PATH, SCRIPT_DIR
+from common import LOG_DIR, CONFIG_FILE, SCRIPT_DIR
 
 # Get the directory where this script lives
 LOG_FILE = os.path.join(LOG_DIR, "set_config.log")
@@ -17,7 +17,7 @@ logging.basicConfig(
 
 def update_config(pairs):
     config = configparser.ConfigParser()
-    config.read(CONFIG_PATH)
+    config.read(CONFIG_FILE)
 
     if "led" not in config:
         config["led"] = {}
@@ -30,7 +30,7 @@ def update_config(pairs):
         else:
             logging.warning(f"Ignored invalid argument: {pair}")
 
-    with open(CONFIG_PATH, "w") as f:
+    with open(CONFIG_FILE, "w") as f:
         config.write(f)
 
 if __name__ == "__main__":

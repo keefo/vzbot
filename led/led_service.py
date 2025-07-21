@@ -6,7 +6,7 @@ import logging
 import signal
 import sys
 from logging.handlers import TimedRotatingFileHandler
-from common import SCRIPT_DIR, LOG_DIR, CONFIG_PATH, SERVICE_POLL_INTERVAL, PYTHON_PATH
+from common import SCRIPT_DIR, LOG_DIR, CONFIG_FILE, SERVICE_POLL_INTERVAL, PYTHON_PATH
 
 print("PYTHON USED:", sys.executable)
 
@@ -67,22 +67,22 @@ def restart_led_script(current_proc):
 
 # === MAIN LOOP ===
 def main():
-    logger.info(f"Starting LED service. Monitoring: {CONFIG_PATH}")
+    logger.info(f"Starting LED service. Monitoring: {CONFIG_FILE}")
 
-    if not os.path.exists(CONFIG_PATH):
+    if not os.path.exists(CONFIG_FILE):
         # create the config file if it doesn't exist
-        with open(CONFIG_PATH, "w") as f:
+        with open(CONFIG_FILE, "w") as f:
             f.write("[led]\n")
             f.write("pattern=rainbow\n")
             f.write("white=0x00\n")
             f.write("brightness=0.3\n")
 
-    last_hash = get_file_hash(CONFIG_PATH)
+    last_hash = get_file_hash(CONFIG_FILE)
     process = None
 
     while True:
         time.sleep(POLL_INTERVAL)
-        current_hash = get_file_hash(CONFIG_PATH)
+        current_hash = get_file_hash(CONFIG_FILE)
 
         # Check for config changes
         if current_hash and current_hash != last_hash:
