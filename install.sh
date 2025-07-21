@@ -20,7 +20,7 @@ git clone
 ls /dev/serial/by-id/*
 
 
-# sudo service klipper stop
+# sudo service klipper stop 
 # make flash FLASH_DEVICE=/dev/serial/by-id/usb-Klipper_stm32h723xx_4A0018001651313338343730-if00
 # sudo service klipper start
 
