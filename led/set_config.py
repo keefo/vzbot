@@ -4,15 +4,12 @@ import configparser
 import logging
 import os
 from pathlib import Path
-
+from common import LOG_DIR, CONFIG_PATH
 
 # Get the directory where this script lives
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = os.path.expanduser("~/printer_data/config/led_config.ini")
-LOG_DIR = os.path.join(SCRIPT_DIR, "logs")
 LOG_FILE = os.path.join(LOG_DIR, "set_config.log")
 
-os.makedirs(LOG_DIR, exist_ok=True)
 logging.basicConfig(
     filename=LOG_FILE,
     level=logging.INFO,

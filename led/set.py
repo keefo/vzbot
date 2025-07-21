@@ -6,10 +6,9 @@ import colorsys
 import time
 import adafruit_pixelbuf
 from adafruit_raspberry_pi5_neopixel_write import neopixel_write
+from common import LOG_DIR, CONFIG_PATH
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_FILE = os.path.join(SCRIPT_DIR, "led_config.ini")
-LOG_DIR = os.path.join(SCRIPT_DIR, "logs")
 LOG_FILE = os.path.join(LOG_DIR, "set.log")
 PIN = board.D10
 LED_COUNT = 21

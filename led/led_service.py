@@ -6,17 +6,16 @@ import logging
 import signal
 import sys
 from logging.handlers import TimedRotatingFileHandler
+from common import LOG_DIR, CONFIG_PATH, SERVICE_POLL_INTERVAL
 
 print("PYTHON USED:", sys.executable)
 
 # === CONFIGURABLE PATHS ===
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PYTHON_PATH = os.path.join(SCRIPT_DIR, "venv/bin/python3")
-CONFIG_PATH = os.path.expanduser("~/printer_data/config/led_config.ini")
 SCRIPT_PATH = os.path.join(SCRIPT_DIR, "set.py")
-LOG_DIR = os.path.join(SCRIPT_DIR, "logs")
 LOG_FILE = os.path.join(LOG_DIR, "led_service.log")
-POLL_INTERVAL = 1  # seconds
+POLL_INTERVAL = SERVICE_POLL_INTERVAL
 
 # === SETUP LOGGING ===
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -71,6 +70,15 @@ def restart_led_script(current_proc):
 # === MAIN LOOP ===
 def main():
     logger.info(f"Starting LED service. Monitoring: {CONFIG_PATH}")
+
+    if not os.path.exists(CONFIG_PATH):
+        # create the config file if it doesn't exist
+        with open(CONFIG_PATH, "w") as f:
+            f.write("[led]\n")
+            f.write("pattern=rainbow\n")
+            f.write("white=0x00\n")
+            f.write("brightness=0.3\n")
+
     last_hash = get_file_hash(CONFIG_PATH)
     process = None
 
