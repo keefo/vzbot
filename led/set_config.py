@@ -4,10 +4,9 @@ import configparser
 import logging
 import os
 from pathlib import Path
-from common import LOG_DIR, CONFIG_PATH
+from common import LOG_DIR, CONFIG_PATH, SCRIPT_DIR
 
 # Get the directory where this script lives
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_FILE = os.path.join(LOG_DIR, "set_config.log")
 
 logging.basicConfig(

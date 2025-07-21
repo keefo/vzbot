@@ -8,7 +8,6 @@ import adafruit_pixelbuf
 from adafruit_raspberry_pi5_neopixel_write import neopixel_write
 from common import LOG_DIR, CONFIG_PATH
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_FILE = os.path.join(LOG_DIR, "set.log")
 PIN = board.D10
 LED_COUNT = 21

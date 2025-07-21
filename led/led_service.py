@@ -6,13 +6,11 @@ import logging
 import signal
 import sys
 from logging.handlers import TimedRotatingFileHandler
-from common import LOG_DIR, CONFIG_PATH, SERVICE_POLL_INTERVAL
+from common import SCRIPT_DIR, LOG_DIR, CONFIG_PATH, SERVICE_POLL_INTERVAL, PYTHON_PATH
 
 print("PYTHON USED:", sys.executable)
 
 # === CONFIGURABLE PATHS ===
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PYTHON_PATH = os.path.join(SCRIPT_DIR, "venv/bin/python3")
 SCRIPT_PATH = os.path.join(SCRIPT_DIR, "set.py")
 LOG_FILE = os.path.join(LOG_DIR, "led_service.log")
 POLL_INTERVAL = SERVICE_POLL_INTERVAL
