@@ -9,7 +9,7 @@ from adafruit_raspberry_pi5_neopixel_write import neopixel_write
 from common import LOG_DIR, CONFIG_FILE
 
 LOG_FILE = os.path.join(LOG_DIR, "set.log")
-PIN = board.D10
+PIN = board.D10 # GPIO 10 (MOSI)
 LED_COUNT = 21
 
 logging.basicConfig(

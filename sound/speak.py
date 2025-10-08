@@ -11,17 +11,22 @@ def main():
     if not text:
         sys.exit(0)
 
-    # Playback device: use Pulse if available, else your I2S card
+    # Playback device: use Pulse if available, else HifiBerry DAC
     device = os.environ.get("DEVICE")
     if not device:
+        # When running from Klipper, PulseAudio may not be available
+        # Try to find available audio devices
         if cmd_exists("pactl"):
             try:
-                run(["pactl", "info"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                # Check if PulseAudio is actually running and accessible
+                result = run(["pactl", "info"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 device = "pulse"
             except Exception:
-                device = "plughw:2,0"
+                # PulseAudio not accessible, fallback to HifiBerry DAC
+                device = "plughw:CARD=sndrpihifiberry,DEV=0"
         else:
-            device = "plughw:2,0"
+            # Use HifiBerry DAC directly
+            device = "plughw:CARD=sndrpihifiberry,DEV=0"
 
     lang   = os.environ.get("LANG_TTS", "en-US")
     gaindb = float(os.environ.get("GAIN_DB", "8"))  # software gain via sox
@@ -50,11 +55,24 @@ def main():
             run(["sox", wav, loud, "gain", "-n", str(gaindb)])
             os.replace(loud, wav)
 
-        # Play it
-        if device == "pulse":
-            run(["aplay", "-D", "pulse", wav], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        else:
-            run(["aplay", "-D", device, wav], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        # Play it with better error handling
+        try:
+            if device == "pulse":
+                run(["aplay", "-D", "pulse", wav], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            else:
+                # Try the specified device first, then fallback to default
+                try:
+                    run(["aplay", "-D", device, wav], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                except subprocess.CalledProcessError:
+                    # If device fails, try system default
+                    run(["aplay", wav], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError as e:
+            # Last resort: try without specifying device at all
+            try:
+                run(["aplay", wav])
+            except Exception:
+                # Audio playback failed, but don't crash - just exit silently
+                pass
 
     finally:
         try: os.remove(wav)
