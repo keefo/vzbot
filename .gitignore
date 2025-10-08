@@ -4,3 +4,4 @@ led/logs
 kill_switch/venv
 kill_switch/logs
 
+.DS_Store
