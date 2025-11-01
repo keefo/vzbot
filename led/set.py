@@ -75,6 +75,8 @@ class WS2814_RGBW(adafruit_pixelbuf.PixelBuf):
             # Apply current variation to base color
             for i in range(len(self)):
                 current_color = self[i]
+                if current_color[3] + variation < 0:
+                    variation = 0
                 self[i] = (
                     current_color[0] + 0,
                     current_color[1] + 0,
@@ -82,7 +84,7 @@ class WS2814_RGBW(adafruit_pixelbuf.PixelBuf):
                     current_color[3] + variation,
                 )
             self.show()
-            if variation < 0:
+            if variation <= 0:
                 variation = 1
             else:
                 variation = -1
