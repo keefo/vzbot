@@ -18,7 +18,7 @@ logging.basicConfig(
     format="[%(asctime)s] %(levelname)s: %(message)s",
 )
 
-class SK6812_RGBW(adafruit_pixelbuf.PixelBuf):
+class WS2814_RGBW(adafruit_pixelbuf.PixelBuf):
     def __init__(self, pin, size, **kwargs):
         self._pin = pin
         super().__init__(size=size, byteorder="WRGB", **kwargs)
@@ -173,7 +173,7 @@ def main():
         w = 0
     elif pattern == "orangeteal":
         try:
-            pixels = SK6812_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
+            pixels = WS2814_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
             # Set color segments
             orange=(253, 89, 1, 0)
             teal=(36, 158, 160, 0)
@@ -188,7 +188,7 @@ def main():
         return
     elif pattern == "demo":
         try:
-            pixels = SK6812_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
+            pixels = WS2814_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
             # Set color segments
             pixels.set_back((255, 255, 255, 255))
             pixels.set_right((255, 0, 0, 20))
@@ -201,7 +201,7 @@ def main():
         return
     elif pattern == "rainbow":
         try:
-            pixels = SK6812_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
+            pixels = WS2814_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
             # Set color segments
             pixels.animate_rainbow()
             pixels.show()
@@ -211,7 +211,7 @@ def main():
         return
     elif pattern == "xmas":
         try:
-            pixels = SK6812_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
+            pixels = WS2814_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
             # Set color segments
             pixels.animate_xmas()
             pixels.show()
@@ -221,7 +221,7 @@ def main():
         return
     elif pattern == "backonly":
         try:
-            pixels = SK6812_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
+            pixels = WS2814_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
             pixels.set_back((255, 255, 255, 255))
             pixels.set_right((0, 0, 0, 0))
             pixels.set_front((0, 0, 0, 0))
@@ -235,7 +235,7 @@ def main():
     logging.info(f"Setting LEDs to pattern={pattern} white={white} brightness {brightness}")
 
     try:
-        pixels = SK6812_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
+        pixels = WS2814_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
         pixels.fill((r, g, b, w))
         logging.info("LEDs updated successfully.")
     except Exception as e:
