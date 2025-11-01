@@ -14,7 +14,7 @@ LED_COUNT = 21
 
 logging.basicConfig(
     filename=LOG_FILE,
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="[%(asctime)s] %(levelname)s: %(message)s",
 )
 
@@ -213,6 +213,7 @@ def main():
             pixels.set_left(teal)
             pixels.show()
             logging.info("LEDs updated successfully.")
+            pixels.animate_keep_alive()
         except Exception as e:
             logging.exception("Failed to apply LED config")
         return
@@ -226,6 +227,7 @@ def main():
             pixels.set_left((0, 0, 255, 20))
             pixels.show()
             logging.info("LEDs updated successfully.")
+            pixels.animate_keep_alive()
         except Exception as e:
             logging.exception("Failed to apply LED config")
         return
@@ -236,6 +238,7 @@ def main():
             pixels.animate_rainbow()
             pixels.show()
             logging.info("LEDs updated successfully.")
+            pixels.animate_keep_alive()
         except Exception as e:
             logging.exception("Failed to apply LED config")
         return
@@ -246,6 +249,7 @@ def main():
             pixels.animate_xmas()
             pixels.show()
             logging.info("LEDs updated successfully.")
+            pixels.animate_keep_alive()
         except Exception as e:
             logging.exception("Failed to apply LED config")
         return
@@ -258,6 +262,7 @@ def main():
             pixels.set_left((0, 0, 0, 0))
             pixels.show()
             logging.info("LEDs updated successfully.")
+            pixels.animate_keep_alive()
         except Exception as e:
             logging.exception("Failed to apply LED config")
         return
@@ -268,10 +273,9 @@ def main():
         pixels = WS2814_RGBW(PIN, LED_COUNT, brightness=brightness, auto_write=True)
         pixels.fill((r, g, b, w))
         logging.info("LEDs updated successfully.")
+        pixels.animate_keep_alive()
     except Exception as e:
         logging.exception("Failed to apply LED config")
-
-    pixels.animate_keep_alive()
     
 if __name__ == "__main__":
     main()
