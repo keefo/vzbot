@@ -1,6 +1,7 @@
 led/venv
 led/led_config.ini
 led/logs
+led/__pycache__
 kill_switch/venv
 kill_switch/logs
 
