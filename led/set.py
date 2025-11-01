@@ -62,6 +62,36 @@ class WS2814_RGBW(adafruit_pixelbuf.PixelBuf):
             logging.info(f"set_rainbow {i} ({r}, {g}, {b})")
             self[i] = (r, g, b, 0)  # SK6812 RGBW: (R, G, B, W)
     
+
+    def animate_keep_alive(self):
+        """
+        Keep-alive animation that makes minimal visual changes to prevent LED strip
+        from becoming unresponsive. Cycles through very subtle brightness variations.
+        """
+        # Create subtle variation levels (very minimal changes)
+        variation = -1
+        delay = 60
+        while True:
+            # Apply current variation to base color
+            for i in range(len(self)):
+                current_color = self[i]
+                self[i] = (
+                    current_color[0] + 0,
+                    current_color[1] + 0,
+                    current_color[2] + 0,
+                    current_color[3] + variation,
+                )
+            self.show()
+            if variation < 0:
+                variation = 1
+            else:
+                variation = -1
+            
+            # Move to next variation level         
+            logging.debug(f"Keep-alive update: color={self[i]}, next_variation_in={delay}s")
+            time.sleep(delay)
+
+
     def animate_rainbow(self, delay=0.5):
         num_leds = len(self)
         logging.info(f"animate_rainbow start: num_leds={num_leds}")
@@ -241,5 +271,7 @@ def main():
     except Exception as e:
         logging.exception("Failed to apply LED config")
 
+    pixels.animate_keep_alive()
+    
 if __name__ == "__main__":
     main()
