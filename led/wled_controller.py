@@ -69,16 +69,16 @@ class WLEDController:
             logging.error(f"Failed to set segments: {e}")
             return False
 
-    def set_individual_leds(self, led_colors, brightness=None):
+    def set_individual_leds(self, led_colors, brightness=None, start=0, stop=21):
         """
         Set individual LED colors using WLED's /json/state API
         led_colors: list of (r, g, b, w) tuples for each LED
+        start: Starting LED index (default 0)
+        stop: Ending LED index (default 21)
         """
         try:
-            # First, unfreeze the segment
-            requests.post(f"{self.base_url}/state", json={
-                "seg": [{"id": 0, "frz": False}]
-            }, timeout=2)
+            # First ensure WLED is on
+            requests.post(f"{self.base_url}/state", json={"on": True}, timeout=2)
             
             # Build the individual LED data
             # WLED format: {"seg":[{"id":0,"i":[index,r,g,b,w, index,r,g,b,w, ...]}]}
@@ -88,8 +88,11 @@ class WLEDController:
 
             seg_config = {
                 "id": 0,
+                "start": start,
+                "stop": stop,
                 "i": led_data,
-                "fx": 0  # Set effect to Solid (0) to use our colors
+                "fx": 0,  # Set effect to Solid (0) to use our colors
+                "on": True  # Ensure segment is on
             }
             if brightness is not None:
                 seg_config["bri"] = brightness
@@ -99,7 +102,7 @@ class WLEDController:
                 "seg": [seg_config]
             }
             
-            logging.debug(f"Sending to WLED: {len(led_data)} LED values, brightness={brightness}, fx=0")
+            logging.debug(f"Sending to WLED: {len(led_data)} LED values, start={start}, stop={stop}, brightness={brightness}, fx=0")
             
             response = requests.post(f"{self.base_url}/state", json=payload, timeout=2)
             return response.ok
@@ -110,20 +113,27 @@ class WLEDController:
     def reset_to_single_segment(self, start=0, stop=21):
         """
         Reset WLED to use a single segment covering all LEDs
-        Call this after complex patterns to clean up extra segments
+        Deletes all extra segments by setting them to stop=0
         """
         try:
+            # Create payload that resets segment 0 and deletes segments 1-9
+            segments = [{
+                "id": 0,
+                "start": start,
+                "stop": stop,
+                "on": True
+            }]
+            # Add deletion entries for segments 1-9 (set stop=0 to delete)
+            for i in range(1, 10):
+                segments.append({
+                    "id": i,
+                    "stop": 0
+                })
+            
             response = requests.post(f"{self.base_url}/state", json={
                 "on": True,
                 "mainseg": 0,
-                "seg": [
-                    {
-                        "id": 0,
-                        "start": start,
-                        "stop": stop,
-                        "on": True
-                    }
-                ]
+                "seg": segments
             }, timeout=2)
             return response.ok
         except Exception as e:

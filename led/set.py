@@ -1,4 +1,5 @@
 import os
+import sys
 import configparser
 import logging
 import time
@@ -39,6 +40,11 @@ class WS2814_RGBW_WLED:
         """Fill all LEDs with one color"""
         for i in range(self.size):
             self.pixels[i] = color
+        # Reset to single segment before applying color
+        self.wled.reset_to_single_segment(
+            start=self.start_index,
+            stop=self.start_index + self.size
+        )
         self.show()
 
     def show(self):
@@ -47,17 +53,8 @@ class WS2814_RGBW_WLED:
             return
         # Use the first pixel color as solid color for simplicity
         r, g, b, w = self.pixels[0]
-        # For solid colors, use single segment and then reset
-        self.wled.set_segment_colors([{
-            "start": self.start_index,
-            "stop": self.start_index + self.size,
-            "col": [r, g, b, w]
-        }], brightness=self.brightness)
-        # Reset to single segment to avoid multiple segments persisting
-        self.wled.reset_to_single_segment(
-            start=self.start_index,
-            stop=self.start_index + self.size
-        )
+        # For solid colors, use single segment
+        self.wled.set_color(r, g, b, w, brightness=self.brightness, start=self.start_index, stop=self.start_index + self.size)
 
     def set_back(self, color):
         for i in range(0, 5):
@@ -88,9 +85,46 @@ class WS2814_RGBW_WLED:
             self.pixels[i] = color
 
     def show_segments(self):
-        """Send segment-based colors to WLED using individual LED API"""
-        # Send individual LED colors to WLED (doesn't create new segments)
-        self.wled.set_individual_leds(self.pixels, brightness=self.brightness)
+        """Send segment-based colors to WLED using multiple segments"""
+        # Build segments by grouping consecutive pixels with the same color
+        segments = []
+        if not self.pixels:
+            return
+            
+        current_color = self.pixels[0]
+        start_idx = 0
+        
+        for i in range(1, len(self.pixels) + 1):
+            # Check if we reached end or color changed
+            if i == len(self.pixels) or self.pixels[i] != current_color:
+                # Create segment for this color range
+                r, g, b, w = current_color
+                segments.append({
+                    "start": self.start_index + start_idx,
+                    "stop": self.start_index + i,
+                    "col": [[r, g, b, w]],
+                    "fx": 0,  # Solid color
+                    "bri": self.brightness
+                })
+                logging.debug(f"Segment {len(segments)}: LEDs {self.start_index + start_idx}-{self.start_index + i} = RGB({r},{g},{b},{w})")
+                
+                if i < len(self.pixels):
+                    current_color = self.pixels[i]
+                    start_idx = i
+        
+        # Send all segments to WLED
+        try:
+            import requests
+            payload = {
+                "on": True,
+                "seg": segments
+            }
+            logging.info(f"Sending {len(segments)} segments to WLED")
+            response = requests.post(f"http://{self.wled.ip}/json/state", json=payload, timeout=2)
+            return response.ok
+        except Exception as e:
+            logging.error(f"Failed to send segments: {e}")
+            return False
 
     def animate_rainbow(self, delay=0.5):
         """Use WLED built-in rainbow effect"""
@@ -129,26 +163,37 @@ class WS2814_RGBW_WLED:
 
 
 def main():
-    config = configparser.ConfigParser()
-    if not os.path.exists(CONFIG_FILE):
-        logging.error(f"Missing config file: {CONFIG_FILE}")
-        return
+    # Check for command-line arguments first
+    is_cli_mode = len(sys.argv) >= 2
+    
+    if is_cli_mode:
+        # Command-line mode: python3 set.py <pattern> [brightness]
+        pattern = sys.argv[1]
+        brightness = float(sys.argv[2]) if len(sys.argv) >= 3 else 0.5
+        white = 0
+        logging.info(f"Command-line mode: pattern={pattern}, brightness={brightness}")
+    else:
+        # Config file mode: read from config
+        config = configparser.ConfigParser()
+        if not os.path.exists(CONFIG_FILE):
+            logging.error(f"Missing config file: {CONFIG_FILE}")
+            return
 
-    config.read(CONFIG_FILE)
+        config.read(CONFIG_FILE)
 
-    if "led" not in config:
-        logging.error("Missing [led] section in config file.")
-        return
+        if "led" not in config:
+            logging.error("Missing [led] section in config file.")
+            return
 
-    white = 0
-    try:
-        section = config["led"]
-        pattern = str(section.get("pattern", ""))
-        white = int(section.get("white", "0x00"), 00)
-        brightness = float(section.get("brightness", 0.3))
-    except Exception:
-        logging.exception("Failed to parse LED config")
-        return
+        white = 0
+        try:
+            section = config["led"]
+            pattern = str(section.get("pattern", ""))
+            white = int(section.get("white", "0x00"), 00)
+            brightness = float(section.get("brightness", 0.3))
+        except Exception:
+            logging.exception("Failed to parse LED config")
+            return
 
     r = 0
     g = 0
@@ -225,7 +270,8 @@ def main():
             pixels.set_left(teal)
             pixels.show_segments()  # Use segment-based update
             logging.info("LEDs updated successfully.")
-            pixels.animate_keep_alive()
+            if not is_cli_mode:
+                pixels.animate_keep_alive()
         except Exception:
             logging.exception("Failed to apply LED config")
         return
@@ -241,7 +287,8 @@ def main():
             pixels.set_left((0, 0, 255, 20))
             pixels.show_segments()  # Use segment-based update
             logging.info("LEDs updated successfully.")
-            pixels.animate_keep_alive()
+            if not is_cli_mode:
+                pixels.animate_keep_alive()
         except Exception:
             logging.exception("Failed to apply LED config")
         return
@@ -276,7 +323,8 @@ def main():
             pixels.set_left((0, 0, 0, 0))
             pixels.show_segments()  # Use segment-based update
             logging.info("LEDs updated successfully.")
-            pixels.animate_keep_alive()
+            if not is_cli_mode:
+                pixels.animate_keep_alive()
         except Exception:
             logging.exception("Failed to apply LED config")
         return
