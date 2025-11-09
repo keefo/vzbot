@@ -62,16 +62,32 @@ class WLEDController:
             logging.error(f"Failed to set segments: {e}")
             return False
 
-    def set_effect(self, effect_id=0, speed=128, intensity=128):
-        """Set WLED built-in effect"""
+    def set_effect(self, effect_id=0, speed=128, intensity=128, start=None, stop=None):
+        """
+        Set WLED built-in effect
+
+        Args:
+            effect_id: Effect number (0=Solid, 1=Blink, 9=Rainbow, etc.)
+            speed: Effect speed (0-255)
+            intensity: Effect intensity (0-255)
+            start: Starting LED index (optional, for specific segment)
+            stop: Ending LED index (optional, for specific segment)
+        """
         try:
+            seg_config = {
+                "fx": effect_id,  # 0=Solid, 1=Blink, 9=Rainbow, etc.
+                "sx": speed,      # 0-255
+                "ix": intensity   # 0-255
+            }
+
+            # Add segment range if specified
+            if start is not None and stop is not None:
+                seg_config["start"] = start
+                seg_config["stop"] = stop
+
             response = requests.post(f"{self.base_url}/state", json={
                 "on": True,
-                "seg": [{
-                    "fx": effect_id,  # 0=Solid, 1=Blink, 9=Rainbow, etc.
-                    "sx": speed,      # 0-255
-                    "ix": intensity   # 0-255
-                }]
+                "seg": [seg_config]
             }, timeout=2)
             return response.ok
         except Exception as e:

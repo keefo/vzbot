@@ -3,7 +3,7 @@ import configparser
 import logging
 import time
 from wled_controller import WLEDController
-from common import LOG_DIR, CONFIG_FILE, WLED_IP, LED_COUNT
+from common import LOG_DIR, CONFIG_FILE, WLED_IP, LED_COUNT, LED_START_INDEX
 
 LOG_FILE = os.path.join(LOG_DIR, "set.log")
 
@@ -17,9 +17,10 @@ logging.basicConfig(
 class WS2814_RGBW_WLED:
     """WLED-based LED controller - replaces direct GPIO control"""
 
-    def __init__(self, wled_ip, size, brightness=0.3, **kwargs):
+    def __init__(self, wled_ip, size, brightness=0.3, start_index=0, **kwargs):
         self.wled = WLEDController(wled_ip)
         self.size = size
+        self.start_index = start_index  # Offset for multi-port WLED setups
         self.brightness = int(brightness * 255)  # Convert 0.0-1.0 to 0-255
         self.pixels = [(0, 0, 0, 0)] * size  # Local state buffer
 
@@ -46,7 +47,12 @@ class WS2814_RGBW_WLED:
             return
         # Use the first pixel color as solid color for simplicity
         r, g, b, w = self.pixels[0]
-        self.wled.set_color(r, g, b, w, brightness=self.brightness)
+        # For solid colors, create a single segment with the offset
+        self.wled.set_segment_colors([{
+            "start": self.start_index,
+            "stop": self.start_index + self.size,
+            "col": [r, g, b, w]
+        }])
 
     def set_back(self, color):
         for i in range(0, 5):
@@ -87,14 +93,22 @@ class WS2814_RGBW_WLED:
             if self.pixels[i] != current_color:
                 # End current segment
                 r, g, b, w = current_color
-                segments.append({"start": start_idx, "stop": i, "col": [r, g, b, w]})
+                segments.append({
+                    "start": self.start_index + start_idx,
+                    "stop": self.start_index + i,
+                    "col": [r, g, b, w]
+                })
                 # Start new segment
                 current_color = self.pixels[i]
                 start_idx = i
 
         # Add final segment
         r, g, b, w = current_color
-        segments.append({"start": start_idx, "stop": len(self.pixels), "col": [r, g, b, w]})
+        segments.append({
+            "start": self.start_index + start_idx,
+            "stop": self.start_index + len(self.pixels),
+            "col": [r, g, b, w]
+        })
 
         # Send to WLED
         self.wled.set_segment_colors(segments)
@@ -102,7 +116,12 @@ class WS2814_RGBW_WLED:
     def animate_rainbow(self, delay=0.5):
         """Use WLED built-in rainbow effect"""
         logging.info("Starting rainbow animation via WLED effect")
-        self.wled.set_effect(effect_id=9, speed=128)  # Effect 9 = Rainbow
+        self.wled.set_effect(
+            effect_id=9,
+            speed=128,
+            start=self.start_index,
+            stop=self.start_index + self.size
+        )
         # Keep running to maintain compatibility with old interface
         while True:
             time.sleep(60)  # Just sleep, WLED handles the animation
@@ -110,7 +129,12 @@ class WS2814_RGBW_WLED:
     def animate_xmas(self, delay=0.5):
         """Use WLED built-in Christmas effect"""
         logging.info("Starting Christmas animation via WLED effect")
-        self.wled.set_effect(effect_id=47, speed=128)  # Effect 47 = Christmas
+        self.wled.set_effect(
+            effect_id=47,
+            speed=128,
+            start=self.start_index,
+            stop=self.start_index + self.size
+        )
         # Keep running to maintain compatibility with old interface
         while True:
             time.sleep(60)  # Just sleep, WLED handles the animation
@@ -210,7 +234,9 @@ def main():
         w = 0
     elif pattern == "orangeteal":
         try:
-            pixels = WS2814_RGBW_WLED(WLED_IP, LED_COUNT, brightness=brightness)
+            pixels = WS2814_RGBW_WLED(
+                WLED_IP, LED_COUNT, brightness=brightness, start_index=LED_START_INDEX
+            )
             # Set color segments
             orange = (253, 89, 1, 0)
             teal = (36, 158, 160, 0)
@@ -226,7 +252,9 @@ def main():
         return
     elif pattern == "demo":
         try:
-            pixels = WS2814_RGBW_WLED(WLED_IP, LED_COUNT, brightness=brightness)
+            pixels = WS2814_RGBW_WLED(
+                WLED_IP, LED_COUNT, brightness=brightness, start_index=LED_START_INDEX
+            )
             # Set color segments
             pixels.set_back((255, 255, 255, 255))
             pixels.set_right((255, 0, 0, 20))
@@ -240,7 +268,9 @@ def main():
         return
     elif pattern == "rainbow":
         try:
-            pixels = WS2814_RGBW_WLED(WLED_IP, LED_COUNT, brightness=brightness)
+            pixels = WS2814_RGBW_WLED(
+                WLED_IP, LED_COUNT, brightness=brightness, start_index=LED_START_INDEX
+            )
             pixels.animate_rainbow()
             logging.info("LEDs updated successfully.")
         except Exception:
@@ -248,7 +278,9 @@ def main():
         return
     elif pattern == "xmas":
         try:
-            pixels = WS2814_RGBW_WLED(WLED_IP, LED_COUNT, brightness=brightness)
+            pixels = WS2814_RGBW_WLED(
+                WLED_IP, LED_COUNT, brightness=brightness, start_index=LED_START_INDEX
+            )
             pixels.animate_xmas()
             logging.info("LEDs updated successfully.")
         except Exception:
@@ -256,7 +288,9 @@ def main():
         return
     elif pattern == "backonly":
         try:
-            pixels = WS2814_RGBW_WLED(WLED_IP, LED_COUNT, brightness=brightness)
+            pixels = WS2814_RGBW_WLED(
+                WLED_IP, LED_COUNT, brightness=brightness, start_index=LED_START_INDEX
+            )
             pixels.set_back((255, 255, 255, 255))
             pixels.set_right((0, 0, 0, 0))
             pixels.set_front((0, 0, 0, 0))
@@ -271,7 +305,9 @@ def main():
     logging.info(f"Setting LEDs to pattern={pattern} white={white} brightness {brightness}")
 
     try:
-        pixels = WS2814_RGBW_WLED(WLED_IP, LED_COUNT, brightness=brightness)
+        pixels = WS2814_RGBW_WLED(
+            WLED_IP, LED_COUNT, brightness=brightness, start_index=LED_START_INDEX
+        )
         pixels.fill((r, g, b, w))
         logging.info("LEDs updated successfully.")
         # No need to keep alive for solid colors - WLED maintains state
