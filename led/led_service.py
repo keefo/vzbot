@@ -3,7 +3,6 @@ import time
 import subprocess
 import hashlib
 import logging
-import signal
 import sys
 from logging.handlers import TimedRotatingFileHandler
 from common import SCRIPT_DIR, LOG_DIR, CONFIG_FILE, SERVICE_POLL_INTERVAL, PYTHON_PATH
@@ -28,6 +27,7 @@ handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s
 handler.suffix = "%Y-%m-%d"
 logger.addHandler(handler)
 
+
 # === FUNCTION TO HASH CONFIG FILE CONTENTS ===
 def get_file_hash(filepath):
     try:
@@ -39,6 +39,7 @@ def get_file_hash(filepath):
     except Exception as e:
         logger.error(f"Error reading config file: {e}")
         return None
+
 
 # === HANDLE RESTART OF SET.PY ===
 def restart_led_script(current_proc):
@@ -61,9 +62,10 @@ def restart_led_script(current_proc):
         new_proc = subprocess.Popen([PYTHON_PATH, SCRIPT_PATH])
         logger.info(f"Started new LED script: PID={new_proc.pid}")
         return new_proc
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to start LED script")
         return None
+
 
 # === MAIN LOOP ===
 def main():
@@ -94,6 +96,7 @@ def main():
         if process and process.poll() is not None:
             logger.info(f"LED script exited with code {process.returncode}")
             process = None
+
 
 if __name__ == "__main__":
     try:

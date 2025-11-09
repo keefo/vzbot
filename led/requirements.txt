@@ -1,4 +1,1 @@
-lgpio
-Adafruit-Blinka
-Adafruit-Blinka-Raspberry-Pi5-Neopixel
-adafruit-circuitpython-pixelbuf
+requests
