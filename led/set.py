@@ -47,12 +47,17 @@ class WS2814_RGBW_WLED:
             return
         # Use the first pixel color as solid color for simplicity
         r, g, b, w = self.pixels[0]
-        # For solid colors, create a single segment with the offset
+        # For solid colors, use single segment and then reset
         self.wled.set_segment_colors([{
             "start": self.start_index,
             "stop": self.start_index + self.size,
             "col": [r, g, b, w]
-        }])
+        }], brightness=self.brightness)
+        # Reset to single segment to avoid multiple segments persisting
+        self.wled.reset_to_single_segment(
+            start=self.start_index,
+            stop=self.start_index + self.size
+        )
 
     def set_back(self, color):
         for i in range(0, 5):
@@ -83,35 +88,9 @@ class WS2814_RGBW_WLED:
             self.pixels[i] = color
 
     def show_segments(self):
-        """Send segment-based colors to WLED (for orangeteal, demo, backonly patterns)"""
-        # Build segments list from pixel buffer
-        segments = []
-        current_color = self.pixels[0]
-        start_idx = 0
-
-        for i in range(1, len(self.pixels)):
-            if self.pixels[i] != current_color:
-                # End current segment
-                r, g, b, w = current_color
-                segments.append({
-                    "start": self.start_index + start_idx,
-                    "stop": self.start_index + i,
-                    "col": [r, g, b, w]
-                })
-                # Start new segment
-                current_color = self.pixels[i]
-                start_idx = i
-
-        # Add final segment
-        r, g, b, w = current_color
-        segments.append({
-            "start": self.start_index + start_idx,
-            "stop": self.start_index + len(self.pixels),
-            "col": [r, g, b, w]
-        })
-
-        # Send to WLED
-        self.wled.set_segment_colors(segments)
+        """Send segment-based colors to WLED using individual LED API"""
+        # Send individual LED colors to WLED (doesn't create new segments)
+        self.wled.set_individual_leds(self.pixels, brightness=self.brightness)
 
     def animate_rainbow(self, delay=0.5):
         """Use WLED built-in rainbow effect"""
