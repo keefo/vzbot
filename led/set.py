@@ -129,6 +129,11 @@ class WS2814_RGBW_WLED:
     def animate_rainbow(self, delay=0.5):
         """Use WLED built-in rainbow effect"""
         logging.info("Starting rainbow animation via WLED effect")
+        # Ensure previous multi-segment patterns do not persist into effect mode.
+        self.wled.reset_to_single_segment(
+            start=self.start_index,
+            stop=self.start_index + self.size,
+        )
         self.wled.set_effect(
             effect_id=9,
             speed=128,
@@ -144,19 +149,28 @@ class WS2814_RGBW_WLED:
             time.sleep(60)  # Just sleep, WLED handles the animation
 
     def animate_xmas(self, delay=0.5):
-        """Use WLED built-in Christmas effect"""
-        logging.info("Starting Christmas animation via WLED effect")
-        self.wled.set_effect(
-            effect_id=47,
-            speed=128,
-            intensity=200,
-            brightness=self.brightness,
+        """Animate Christmas using Rainbow effect with red/green colors only."""
+        # Ensure previous multi-segment patterns do not persist into effect mode.
+        self.wled.reset_to_single_segment(
             start=self.start_index,
-            stop=self.start_index + self.size
+            stop=self.start_index + self.size,
         )
-        # Keep running to maintain compatibility with old interface
+
+        logging.info("Starting Christmas via effect_id=9 with red/green colors")
+        self.wled.set_effect(
+            effect_id=9,
+            speed=128,
+            intensity=255,
+            brightness=self.brightness,
+            palette=0,
+            colors=[[255, 0, 0, 0], [0, 255, 0, 0], [0, 0, 0, 0]],
+            start=self.start_index,
+            stop=self.start_index + self.size,
+        )
+
+        # Keep process alive so led_service can manage lifecycle consistently.
         while True:
-            time.sleep(60)  # Just sleep, WLED handles the animation
+            time.sleep(60)
 
     def animate_keep_alive(self):
         """
@@ -268,8 +282,8 @@ def main():
                 WLED_IP, LED_COUNT, brightness=brightness, start_index=LED_START_INDEX
             )
             # Set color segments
-            orange = (253, 89, 1, 0)
-            teal = (36, 158, 160, 0)
+            orange = (0xff, 0x91, 0x00, 0x6d)
+            teal = (0x00, 0xff, 0xfb, 0x63)
             pixels.set_back(orange)
             pixels.set_right(orange)
             pixels.set_front(teal)

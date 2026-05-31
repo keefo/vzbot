@@ -15,6 +15,62 @@ class WLEDController:
         self.ip = ip or WLED_IP
         self.base_url = f"http://{self.ip}/json"
 
+    def get_effects(self):
+        """Return WLED effect names list, or empty list on error."""
+        try:
+            response = requests.get(f"{self.base_url}/effects", timeout=2)
+            if response.ok:
+                data = response.json()
+                return data if isinstance(data, list) else []
+        except Exception as e:
+            logging.error(f"Failed to fetch effects: {e}")
+        return []
+
+    def get_palettes(self):
+        """Return WLED palette names list, or empty list on error."""
+        try:
+            response = requests.get(f"{self.base_url}/palettes", timeout=2)
+            if response.ok:
+                data = response.json()
+                return data if isinstance(data, list) else []
+        except Exception as e:
+            logging.error(f"Failed to fetch palettes: {e}")
+        return []
+
+    def find_effect_id(self, preferred_names):
+        """
+        Find the first effect id whose name contains one of preferred_names.
+        Matching is case-insensitive and uses substring matching.
+        Returns None if no match is found.
+        """
+        effects = self.get_effects()
+        if not effects:
+            return None
+
+        normalized = [name.lower() for name in preferred_names]
+        for needle in normalized:
+            for idx, effect_name in enumerate(effects):
+                if needle in effect_name.lower():
+                    return idx
+        return None
+
+    def find_palette_id(self, preferred_names):
+        """
+        Find the first palette id whose name contains one of preferred_names.
+        Matching is case-insensitive and uses substring matching.
+        Returns None if no match is found.
+        """
+        palettes = self.get_palettes()
+        if not palettes:
+            return None
+
+        normalized = [name.lower() for name in preferred_names]
+        for needle in normalized:
+            for idx, palette_name in enumerate(palettes):
+                if needle in palette_name.lower():
+                    return idx
+        return None
+
     def set_color(self, r, g, b, w=0, brightness=128, start=0, stop=21):
         """
         Set solid color across all LEDs (RGBW 4-channel)
@@ -80,11 +136,12 @@ class WLEDController:
             # First ensure WLED is on
             requests.post(f"{self.base_url}/state", json={"on": True}, timeout=2)
             
-            # Build the individual LED data
-            # WLED format: {"seg":[{"id":0,"i":[index,r,g,b,w, index,r,g,b,w, ...]}]}
+            # Build individual LED data.
+            # WLED format: {"seg":[{"id":0,"i":[index,[r,g,b,w], index,[r,g,b,w], ...]}]}
             led_data = []
             for idx, (r, g, b, w) in enumerate(led_colors):
-                led_data.extend([idx, r, g, b, w])
+                absolute_index = start + idx
+                led_data.extend([absolute_index, [r, g, b, w]])
 
             seg_config = {
                 "id": 0,
@@ -102,7 +159,10 @@ class WLEDController:
                 "seg": [seg_config]
             }
             
-            logging.debug(f"Sending to WLED: {len(led_data)} LED values, start={start}, stop={stop}, brightness={brightness}, fx=0")
+            logging.debug(
+                f"Sending to WLED: {len(led_colors)} individual LEDs, "
+                f"start={start}, stop={stop}, brightness={brightness}, fx=0"
+            )
             
             response = requests.post(f"{self.base_url}/state", json=payload, timeout=2)
             return response.ok
