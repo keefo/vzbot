@@ -132,6 +132,8 @@ class WS2814_RGBW_WLED:
         self.wled.set_effect(
             effect_id=9,
             speed=128,
+            intensity=255,
+            brightness=self.brightness,
             start=self.start_index,
             stop=self.start_index + self.size
         )
@@ -145,6 +147,8 @@ class WS2814_RGBW_WLED:
         self.wled.set_effect(
             effect_id=47,
             speed=128,
+            intensity=200,
+            brightness=self.brightness,
             start=self.start_index,
             stop=self.start_index + self.size
         )

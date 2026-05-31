@@ -140,7 +140,7 @@ class WLEDController:
             logging.error(f"Failed to reset segments: {e}")
             return False
 
-    def set_effect(self, effect_id=0, speed=128, intensity=128, start=0, stop=21):
+    def set_effect(self, effect_id=0, speed=128, intensity=128, brightness=None, start=0, stop=21):
         """
         Set WLED built-in effect
 
@@ -148,6 +148,7 @@ class WLEDController:
             effect_id: Effect number (0=Solid, 1=Blink, 9=Rainbow, etc.)
             speed: Effect speed (0-255)
             intensity: Effect intensity (0-255)
+            brightness: Segment brightness (0-255). If None, keep current brightness.
             start: Starting LED index (default 0)
             stop: Ending LED index (default 21)
         
@@ -162,6 +163,8 @@ class WLEDController:
                 "sx": speed,      # 0-255
                 "ix": intensity   # 0-255
             }
+            if brightness is not None:
+                seg_config["bri"] = brightness
 
             response = requests.post(f"{self.base_url}/state", json={
                 "on": True,
