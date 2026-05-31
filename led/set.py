@@ -134,6 +134,8 @@ class WS2814_RGBW_WLED:
             speed=128,
             intensity=255,
             brightness=self.brightness,
+            palette=0,
+            colors=[[255, 0, 0, 0], [0, 255, 0, 0], [0, 0, 255, 0]],
             start=self.start_index,
             stop=self.start_index + self.size
         )

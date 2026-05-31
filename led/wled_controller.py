@@ -140,7 +140,17 @@ class WLEDController:
             logging.error(f"Failed to reset segments: {e}")
             return False
 
-    def set_effect(self, effect_id=0, speed=128, intensity=128, brightness=None, start=0, stop=21):
+    def set_effect(
+        self,
+        effect_id=0,
+        speed=128,
+        intensity=128,
+        brightness=None,
+        start=0,
+        stop=21,
+        palette=None,
+        colors=None,
+    ):
         """
         Set WLED built-in effect
 
@@ -151,6 +161,8 @@ class WLEDController:
             brightness: Segment brightness (0-255). If None, keep current brightness.
             start: Starting LED index (default 0)
             stop: Ending LED index (default 21)
+            palette: Optional WLED palette id
+            colors: Optional WLED color slots [[r,g,b,w], [r,g,b,w], [r,g,b,w]]
         
         Note: start and stop are REQUIRED for effects to work properly on WLED
         """
@@ -165,11 +177,20 @@ class WLEDController:
             }
             if brightness is not None:
                 seg_config["bri"] = brightness
+            if palette is not None:
+                seg_config["pal"] = palette
+            if colors is not None:
+                seg_config["col"] = colors
 
-            response = requests.post(f"{self.base_url}/state", json={
+            payload = {
                 "on": True,
-                "seg": [seg_config]
-            }, timeout=2)
+                "seg": [seg_config],
+            }
+            # Some WLED builds still apply global brightness scaling to effects.
+            if brightness is not None:
+                payload["bri"] = brightness
+
+            response = requests.post(f"{self.base_url}/state", json=payload, timeout=2)
             return response.ok
         except Exception as e:
             logging.error(f"Failed to set effect: {e}")
