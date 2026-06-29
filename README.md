@@ -34,7 +34,7 @@ vzbot
   - [Official Intro](https://mellow.klipper.cn/#/board/fly_sht36_v3_max/intro)
   - [Official Pinout](https://mellow.klipper.cn/#/board/fly_sht36_v3_max/pinout)
   - **CAN UUID**: `85a1452bd027`
-  - **Status**: Currently in Katapult; Klipper firmware still to be flashed over CAN
+  - **Status**: Running Klipper over CAN (firmware flashed 2026-06-28); toolhead pin migration pending
 
 ## Firmware & CAN Bus
 The Super 8 Pro (H723) runs Klipper in **USB-to-CAN bridge mode**. The Pi connects to
@@ -58,6 +58,7 @@ tunneled over that cable. The board also bridges onto the physical CAN wires
 
 ## Worklog
 Detailed upgrade logs live in [`worklog/`](worklog/), one file per change (named by date):
+- [2026-06-28 — SHT36 V3 Max toolhead: CAN migration](worklog/2026-06-28-sht36-toolhead-migration.md)
 - [2026-06-27 — Super 8 Pro: USB serial → USB-to-CAN bridge](worklog/2026-06-27-super8-usb-to-can-bridge.md)
 
 ## Components
