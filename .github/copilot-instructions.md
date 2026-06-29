@@ -11,6 +11,8 @@ facts, read the `README.md` instead.
 - `new_config/` is the **canonical copy of the live Pi config**. When you change config on
   the Pi, mirror it back into `new_config/`; when you change `new_config/`, deploy it to the Pi.
 - Don't let the repo and the live Pi drift. State which side you edited and keep them in sync.
+- For any config change, update both the live vzbot side and the local repo side as a paired
+  change unless the user explicitly asks for one side only.
 
 ### Config sync rule (`printer.cfg` and friends)
 **Goal:** this repo should always hold the latest config from the live vzbot, with
