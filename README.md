@@ -42,7 +42,7 @@ the board over the USB-C cable, but all Klipper communication is now CAN protoco
 tunneled over that cable. The board also bridges onto the physical CAN wires
 (PB8/PB9, CANH/CANL) that reach the SHT36 toolhead.
 
-> **Last upgraded:** 2026-06-27 (see [Worklog](#worklog)).
+> **Last upgraded:** 2026-06-29 (see [Worklog](#worklog)).
 
 - **Main MCU (Super 8 Pro H723)**
   - **CAN UUID**: `538e6d5fb457`
@@ -58,6 +58,7 @@ tunneled over that cable. The board also bridges onto the physical CAN wires
 
 ## Worklog
 Detailed upgrade logs live in [`worklog/`](worklog/), one file per change (named by date):
+- [2026-06-29 — Super8 bridge PF8/PF7 startup quieting](worklog/2026-06-29-super8-pf8-startup-pin.md)
 - [2026-06-28 — SHT36 V3 Max toolhead: CAN migration](worklog/2026-06-28-sht36-toolhead-migration.md)
 - [2026-06-27 — Super 8 Pro: USB serial → USB-to-CAN bridge](worklog/2026-06-27-super8-usb-to-can-bridge.md)
 
