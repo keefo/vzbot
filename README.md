@@ -58,6 +58,7 @@ tunneled over that cable. The board also bridges onto the physical CAN wires
 
 ## Worklog
 Detailed upgrade logs live in [`worklog/`](worklog/), one file per change (named by date):
+- [2026-06-29 - SHT36 MCU temperature sensor added](worklog/2026-06-29-sht36-mcu-temp-sensor.md)
 - [2026-06-29 - Fly Eddy CHECK_BACKLASH implementation](worklog/2026-06-29-fly-eddy-check-backlash.md)
 - [2026-06-29 - Safe Z Home z_hop tuned for CHECK_Z](worklog/2026-06-29-safe-z-home-zhop-3-for-check-z.md)
 - [2026-06-29 - Fly Eddy live distance query (Option A)](worklog/2026-06-29-fly-eddy-live-query-option-a.md)
