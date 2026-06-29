@@ -1,0 +1,29 @@
+diff --git a/klippy/extras/probe_eddy_current.py b/klippy/extras/probe_eddy_current.py
+--- a/klippy/extras/probe_eddy_current.py
++++ b/klippy/extras/probe_eddy_current.py
+@@
+         if not samples:
+             raise self.printer.command_error(
+                 "Unable to obtain probe_eddy_current sensor readings")
+         samples = samples[:sample_count]
+         freq_avg = sum([freq for eventtime, freq in samples]) / len(samples)
+         sensor_z = self.calibration.freq_to_height(freq_avg)
+         if sensor_z <= -OUT_OF_RANGE or sensor_z >= OUT_OF_RANGE:
++            dummy_freqs, cal_zpos = self.calibration.get_calibration()
++            min_z = min(cal_zpos)
++            max_z = max(cal_zpos)
++            if sensor_z >= OUT_OF_RANGE:
++                hint = "move nozzle closer to bed (decrease Z)"
++            else:
++                hint = "move nozzle away from bed (increase Z)"
+             raise self.printer.command_error(
+-                "probe_eddy_current sensor not in valid range")
++                "probe_eddy_current sensor not in valid range: "
++                "freq=%.3fHz height=%.6fmm calibrated=%.6f..%.6fmm hint=%s"
++                % (freq_avg, sensor_z, min_z, max_z, hint))
+         dummy_freqs, cal_zpos = self.calibration.get_calibration()
+         min_z = min(cal_zpos)
+         max_z = max(cal_zpos)
+         gcmd.respond_info(
+             "%s: freq=%.3fHz height=%.6fmm samples=%d range=%.6f..%.6fmm status=ok"
+             % (self.name, freq_avg, sensor_z, len(samples), min_z, max_z))

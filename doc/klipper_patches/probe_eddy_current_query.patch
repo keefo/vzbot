@@ -1,0 +1,78 @@
+diff --git a/klippy/extras/probe_eddy_current.py b/klippy/extras/probe_eddy_current.py
+--- a/klippy/extras/probe_eddy_current.py
++++ b/klippy/extras/probe_eddy_current.py
+@@ -554,6 +554,65 @@ def probe_results_from_avg(measures, toolhead_pos, calibration, offsets):
+     return manual_probe.create_probe_result(toolhead_pos,
+                                             (offsets[0], offsets[1], sensor_z))
+ 
++# Implement PROBE_EDDY_CURRENT_QUERY
++class EddyQueryHelper:
++    def __init__(self, config, sensor_helper, calibration):
++        self.printer = config.get_printer()
++        self.name = config.get_name()
++        self.sensor_helper = sensor_helper
++        self.calibration = calibration
++        cname = self.name.split()[-1]
++        gcode = self.printer.lookup_object('gcode')
++        gcode.register_mux_command("PROBE_EDDY_CURRENT_QUERY", "CHIP",
++                                   cname, self.cmd_EDDY_QUERY,
++                                   desc=self.cmd_EDDY_QUERY_help)
++    cmd_EDDY_QUERY_help = "Report current probe_eddy_current frequency and height"
++    def cmd_EDDY_QUERY(self, gcmd):
++        self.calibration.verify_calibrated()
++        sample_count = gcmd.get_int("SAMPLES", 40, minval=1, maxval=400)
++        sample_time = gcmd.get_float("SAMPLE_TIME", 0.100,
++                                     minval=0.020, maxval=2.000)
++        samples = []
++        is_querying = True
++        def handle_batch(msg):
++            if not is_querying:
++                return False
++            for sample_time, freq, dummy_z in msg.get('data', []):
++                samples.append((sample_time, freq))
++            return len(samples) < sample_count
++        self.sensor_helper.add_client(handle_batch)
++        toolhead = self.printer.lookup_object('toolhead')
++        samples_per_second = self.sensor_helper.get_samples_per_second()
++        min_dwell = float(sample_count) / samples_per_second + 0.100
++        dwell_time = max(sample_time, min_dwell)
++        toolhead.dwell(dwell_time)
++        toolhead.wait_moves()
++        is_querying = False
++        toolhead.dwell(0.110)
++        toolhead.wait_moves()
++        if not samples:
++            raise self.printer.command_error(
++                "Unable to obtain probe_eddy_current sensor readings")
++        samples = samples[:sample_count]
++        freq_avg = sum([freq for eventtime, freq in samples]) / len(samples)
++        sensor_z = self.calibration.freq_to_height(freq_avg)
++        if sensor_z <= -OUT_OF_RANGE or sensor_z >= OUT_OF_RANGE:
++            dummy_freqs, cal_zpos = self.calibration.get_calibration()
++            min_z = min(cal_zpos)
++            max_z = max(cal_zpos)
++            if sensor_z >= OUT_OF_RANGE:
++                hint = "move nozzle closer to bed (decrease Z)"
++            else:
++                hint = "move nozzle away from bed (increase Z)"
++            raise self.printer.command_error(
++                "probe_eddy_current sensor not in valid range: "
++                "freq=%.3fHz height=%.6fmm calibrated=%.6f..%.6fmm hint=%s"
++                % (freq_avg, sensor_z, min_z, max_z, hint))
++        dummy_freqs, cal_zpos = self.calibration.get_calibration()
++        min_z = min(cal_zpos)
++        max_z = max(cal_zpos)
++        gcmd.respond_info(
++            "%s: freq=%.3fHz height=%.6fmm samples=%d range=%.6f..%.6fmm status=ok"
++            % (self.name, freq_avg, sensor_z, len(samples), min_z, max_z))
++
+ 
+ ######################################################################
+ # Data fitting for "tap"
+@@ -1031,6 +1090,7 @@ class PrinterEddyProbe:
+         sensor_type = config.getchoice('sensor_type', {s: s for s in sensors})
+         self.sensor_helper = sensors[sensor_type](config, self.calibration)
++        EddyQueryHelper(config, self.sensor_helper, self.calibration)
+         # Create trigger_analog interface
+         trig_analog = trigger_analog.MCU_trigger_analog(self.sensor_helper)
+         probe.LookupZSteppers(config, trig_analog.get_dispatch().add_stepper)

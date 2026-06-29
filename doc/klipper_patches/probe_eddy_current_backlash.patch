@@ -1,0 +1,87 @@
+diff --git a/klippy/extras/probe_eddy_current.py b/klippy/extras/probe_eddy_current.py
+--- a/klippy/extras/probe_eddy_current.py
++++ b/klippy/extras/probe_eddy_current.py
+@@
+ class EddyQueryHelper:
+@@
+     cmd_EDDY_QUERY_help = "Report current probe_eddy_current frequency and height"
+@@
+     def cmd_EDDY_ESTIMATE_BACKLASH(self, gcmd):
+         self.calibration.verify_calibrated()
+         reactor = self.printer.get_reactor()
+         toolhead = self.printer.lookup_object('toolhead')
+         homed_axes = toolhead.get_status(reactor.monotonic()).get('homed_axes', '')
+         if 'z' not in homed_axes:
+             raise self.printer.command_error("Must home axis first")
+         travel = gcmd.get_float("TRAVEL", 0.500, minval=0.050, maxval=5.000)
+         speed = gcmd.get_float("SPEED", 10.0, minval=1.0, maxval=80.0)
+         cycles = gcmd.get_int("CYCLES", 5, minval=1, maxval=20)
+         sample_count = gcmd.get_int("SAMPLES", 20, minval=1, maxval=400)
+         sample_time = gcmd.get_float("SAMPLE_TIME", 0.100,
+                                      minval=0.020, maxval=2.000)
+
+         pos = list(toolhead.get_position())
+         target_z = gcmd.get_float("TARGET_Z", pos[2])
+
+         pos[2] = target_z
+         toolhead.manual_move(pos, speed)
+
+         cycle_backlash = []
+         cycle_from_above = []
+         cycle_from_below = []
++        cycle_freq_above = []
++        cycle_freq_below = []
+         min_z = max_z = 0.
+         for i in range(cycles):
+             pos[2] = target_z + travel
+             toolhead.manual_move(pos, speed)
+             pos[2] = target_z
+@@
+             freq_from_below, z_from_below, min_z, max_z = self._collect_height(
+                 sample_count, sample_time)
+
++            cycle_freq_above.append(freq_from_above)
++            cycle_freq_below.append(freq_from_below)
+             cycle_from_above.append(z_from_above)
+             cycle_from_below.append(z_from_below)
+             cycle_backlash.append(abs(z_from_above - z_from_below))
+             gcmd.respond_info(
+-                "%s backlash cycle %d/%d: from_above=%.6fmm from_below=%.6fmm estimate=%.6fmm"
+-                % (self.name, i + 1, cycles, z_from_above, z_from_below,
++                "%s backlash cycle %d/%d: above=%.3fHz/%.6fmm below=%.3fHz/%.6fmm estimate=%.6fmm"
++                % (self.name, i + 1, cycles,
++                   freq_from_above, z_from_above,
++                   freq_from_below, z_from_below,
+                    cycle_backlash[-1]))
+
+         avg_backlash = sum(cycle_backlash) / len(cycle_backlash)
+         min_backlash = min(cycle_backlash)
+         max_backlash = max(cycle_backlash)
+@@
+         if len(cycle_backlash) > 1:
+             variance = sum([(b - avg_backlash) ** 2 for b in cycle_backlash]) / len(cycle_backlash)
+             std_backlash = math.sqrt(variance)
++        sorted_backlash = sorted(cycle_backlash)
++        median_backlash = sorted_backlash[len(sorted_backlash) // 2]
++        if len(sorted_backlash) % 2 == 0:
++            median_backlash = (sorted_backlash[len(sorted_backlash)//2 - 1]
++                               + sorted_backlash[len(sorted_backlash)//2]) / 2.
+         avg_from_above = sum(cycle_from_above) / len(cycle_from_above)
+         avg_from_below = sum(cycle_from_below) / len(cycle_from_below)
++        estimates_text = ','.join(['%.6f' % b for b in cycle_backlash])
++        gcmd.respond_info(
++            "%s backlash detail: estimates_mm=[%s]"
++            % (self.name, estimates_text))
+         gcmd.respond_info(
+             "%s backlash: target_z=%.6fmm cycles=%d from_above_avg=%.6fmm "
+-            "from_below_avg=%.6fmm estimate_avg=%.6fmm estimate_min=%.6fmm "
+-            "estimate_max=%.6fmm estimate_std=%.6fmm travel=%.3fmm "
+-            "speed=%.1fmm/s samples=%d range=%.6f..%.6fmm status=ok"
++            "from_below_avg=%.6fmm estimate_avg=%.6fmm estimate_median=%.6fmm "
++            "estimate_min=%.6fmm estimate_max=%.6fmm estimate_std=%.6fmm "
++            "travel=%.3fmm speed=%.1fmm/s samples=%d range=%.6f..%.6fmm status=ok"
+             % (self.name, target_z, cycles, avg_from_above, avg_from_below,
+-               avg_backlash, min_backlash, max_backlash, std_backlash,
++               avg_backlash, median_backlash, min_backlash, max_backlash,
++               std_backlash,
+                travel, speed, sample_count, min_z, max_z))
